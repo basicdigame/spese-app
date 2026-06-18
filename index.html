@@ -6,6 +6,53 @@
   <title>Tracker Spese</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    #pin-screen {
+      position: fixed;
+      inset: 0;
+      background: #0f0f13;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 24px;
+    }
+    #pin-screen h2 { font-size: 1.4rem; color: #fff; }
+    #pin-screen p  { font-size: 0.85rem; color: #666; }
+    #pin-dots {
+      display: flex;
+      gap: 14px;
+    }
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #2a2a3a;
+      border: 2px solid #3a3a55;
+      transition: background 0.15s;
+    }
+    .pin-dot.filled { background: #7c6ff7; border-color: #7c6ff7; }
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      gap: 12px;
+    }
+    .pin-key {
+      height: 72px;
+      border-radius: 50%;
+      border: none;
+      background: #1a1a24;
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .pin-key:active { background: #7c6ff7; }
+    .pin-key.del { font-size: 1rem; color: #888; }
+    #pin-error { color: #ef4444; font-size: 0.85rem; min-height: 20px; }
+  </style>
+  <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -377,6 +424,34 @@
 </head>
 <body>
 
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <h2>🔒 Tracker Spese</h2>
+  <p>Inserisci il PIN per accedere</p>
+  <div id="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+    <div class="pin-dot" id="d4"></div>
+  </div>
+  <div id="pin-error"></div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key" style="background:none"></button>
+  </div>
+</div>
+
 <h1>💸 Tracker Spese</h1>
 <p class="subtitle">Tieni tutto sotto controllo</p>
 
@@ -732,6 +807,48 @@ CATS.forEach(c => {
 });
 
 render();
+
+// ── PIN ───────────────────────────────────────────────────
+const CORRECT_PIN = '78890';
+let pinEntry = '';
+
+(function checkPin() {
+  if (sessionStorage.getItem('pin_ok') === '1') {
+    document.getElementById('pin-screen').style.display = 'none';
+  }
+})();
+
+function pinPress(digit) {
+  if (pinEntry.length >= CORRECT_PIN.length) return;
+  pinEntry += digit;
+  updateDots();
+  if (pinEntry.length === CORRECT_PIN.length) {
+    setTimeout(checkPin2, 150);
+  }
+}
+
+function pinDel() {
+  pinEntry = pinEntry.slice(0, -1);
+  updateDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updateDots() {
+  for (let i = 0; i < CORRECT_PIN.length; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < pinEntry.length);
+  }
+}
+
+function checkPin2() {
+  if (pinEntry === CORRECT_PIN) {
+    sessionStorage.setItem('pin_ok', '1');
+    document.getElementById('pin-screen').style.display = 'none';
+  } else {
+    document.getElementById('pin-error').textContent = 'PIN errato, riprova';
+    pinEntry = '';
+    updateDots();
+  }
+}
 </script>
 </body>
 </html>
